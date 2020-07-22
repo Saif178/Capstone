@@ -1,0 +1,29 @@
+---
+title: "Capstone Final Project"
+author: "Saif Ul Mehdi"
+date: "22/07/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+This project involved using the dataset provided by SwiftKey to do prediction of next word in a phrase which a user types in the mobile handset. The dataset consisted of text which was taken from twitter, news and blogs written in English language. This dataset was used to form the corpus - a body of text ususally consisting of large number of sentences. 
+
+## Algorithm Development
+
+The algorithm was developed to predict the next word in a user-entered phrase, which was base on classic **N-gram** model using a subset of cleaned data from blogs, twitter and news Internet files. **Maximum Likelihood Estimation** (MLE) of unigrams, bigrams and trigrams were computed.
+
+To improve accuracy, (**Jerlinek-Mercer smoothing**)[http://www.ee.columbia.edu/~stanchen/papers/h015l.final.pdf] was used in the algorithm,combining trigram, bigram, and unigram probabilities. Where interpretation failed, **part-of-speech tagging** (POST)[http://en.wikipedia.org/wiki/Part-of-speech_tagging] was used to provide default predictions by part of speech. Suggested word completion was based on the unigrams. A profanity filter was also utilized on all output using a list of bad words.
+
+## The Shiny Application
+
+Using the algorithm, a Shiny application was developed that accepts a phrase as input, suggests word completion from the unigrams, and predicts likely next word based on the linear interploation of trigrams, bigrams and unigrams. The web-based application can be found (here)[https://saif178.shinyapps.io/text_predictor/]. The source files for this application, the data creation, and this presentation can be found (here)[https://github.com/Saif178/Capstone].
+
+## Using the Application
+
+Use of the application is straightforward and can be easily adapted to many educational and commercial uses. The user begins just by typing some text without punctuation in the supplied input box. As the user types, the text is echoed in the field below along with a suggested word completion. At the bottom of the screen, the predicted next word in the phrase is shown.
+

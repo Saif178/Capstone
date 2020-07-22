@@ -1,0 +1,127 @@
+---
+title: "Milestone Project"
+author: "Saif Ul Mehdi"
+date: "19/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+The goal of this project is to mimic the experience of being a data scientist.
+It is common in a Data Science project to get a messy data set, a vague question and less instruction on data analysis.
+
+The project consists of developing a predictive model of text using a Swiftkey company dataset.
+
+The main steps in this exercise will consist of downloading the dataset, understanding it, cleaning it and do some basic data analysis. This document describes the Exploratory Data Analysis done, explaining the major characteristics of the data that have been identified and a summary plan of how to build a prediction algorithm text.
+
+### Loading Libraries
+
+```{r}
+suppressWarnings(library(stringi))
+suppressWarnings(library(NLP))
+suppressWarnings(library(tm))
+suppressPackageStartupMessages(library(ggplot2)) 
+```
+
+## Information about the Datasets
+
+The data provided by the company SwiftKey has four languages but we would be looking only in the English language. The folder en_US has three text files - en_US.blogs, en_US.news, en_US.twitter. We would be looking into these files and find how much big the file is, how many words are there, how many lines of text are there and the maximum number of words one line consists of.
+
+```{r,comment=''}
+fileInformation<-function(filepath){
+  size<-file.info(filepath)$size/1048576
+  connect<-file(filepath,'r')
+  fullText<-readLines(connect)
+  nlines<-length(fullText)
+  maxline<-0
+  for(i in 1:nlines){
+    lineLength<-nchar(fullText[i])
+    if(lineLength>maxline) {maxline<-lineLength}
+  }
+  nwords<-sum(stri_count_words(fullText))
+  close(connect)
+  list(size=size,nlines=nlines,maxline=maxline,nwords=nwords)
+}
+data_dir<-'./final/en_US'
+blog_info<-fileInformation(paste(data_dir,'en_US.blogs.txt',sep='/'))
+news_info<-fileInformation(paste(data_dir,'en_US.news.txt',sep='/'))
+suppressWarnings(twitter_info<-fileInformation(paste(data_dir,'en_US.twitter.txt',sep='/')))
+info<-rbind(blog_info,news_info,twitter_info)
+info
+```
+
+## Sampling the Data
+
+Only a portion of the data will be used for an initial analysis for the three type of data sets: blog, news and twitter. A corpus is also created using the 3 samples.
+
+```{r}
+conb<-file('./final/en_US/en_US.blogs.txt','r')
+conn<-file('./final/en_US/en_US.news.txt','r')
+cont<-file('./final/en_US/en_US.twitter.txt','r')
+
+# Reading first 1000 lines
+
+blogs<-readLines(conb,1000)
+news<-readLines(conn,1000)
+twitter<-readLines(cont,1000)
+corpus<-VCorpus(VectorSource(c(blogs,news,twitter)),readerControl=list(readPlain,language='en',load=TRUE))
+close(conb);close(conn);close(cont)
+```
+
+## Exploration and Data Cleaning
+
+This section will use the text mining library 'tm' to perform Data cleaning tasks. Main cleaning steps are :
+
+1. Converting the document to lowercase
+
+2. Removing punctuation marks
+
+3. Removing numbers
+
+4. Removing stop words (i.e., 'and', 'not', 'is', etc.)
+
+5. Removing undesired terms
+
+6. Removing extra whitespaces which might have been created in the previous 5 steps
+
+```{r}
+corpus<-tm_map(corpus,content_transformer(tolower))
+corpus<-tm_map(corpus,removePunctuation)
+corpus<-tm_map(corpus,removeNumbers)
+corpus<-tm_map(corpus,removeWords,stopwords('en'))
+conbd<-file('badWords.txt','r')
+suppressWarnings(bad<-readLines(conbd))
+corpus<-tm_map(corpus,removeWords,bad)
+corpus<-tm_map(corpus,stripWhitespace)
+close(conbd)
+```
+
+## Analysis of the cleaned Data
+
+Data is cleaned and ready to be analyzed, so for instance we would check some of the words which are most frequently used than others.
+
+```{r,comment=''}
+gram1<-as.data.frame(as.matrix(TermDocumentMatrix(corpus)))
+gram1v<-sort(rowSums(gram1),decreasing=TRUE)
+gram1d<-data.frame(word=names(gram1v),freq=gram1v)
+head(gram1d,10)
+```
+
+## Histogram of Top 30 Unigrams
+
+```{r,echo=FALSE}
+g<-ggplot(gram1d[1:30,],aes(x=reorder(word,freq),y=freq))+geom_bar(stat='identity',width=0.5,fill='green')
+g<-g+ggtitle('Unigrams')+xlab('Words')+ylab('Frequency')+theme(axis.text.x=element_text(angle=65,vjust=0.6),plot.title=element_text(hjust=0.5))
+g
+```
+
+## Planning
+
+Next steps will be:
+
+- Building the predictive models using various machine learning algorithms
+- Developing the application using Shiny to run it online
+
